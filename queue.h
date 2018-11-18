@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <limits.h>
+
 #define TYPE int    //bool if all arcs are equal
 
 struct QNode {
@@ -48,4 +50,34 @@ struct QNode *deQueue(queue *q) {
     if (q->front == NULL)
         q->rear = NULL;
     return temp;
+}
+
+typedef struct Stack {
+  int top;
+  unsigned capacity;
+  int *array;
+} stack;
+
+struct Stack *createStack(unsigned capacity) {
+    stack *stack = (struct Stack *) malloc(sizeof(stack));
+    stack->capacity = capacity;
+    stack->top = -1;
+    stack->array = (int *) malloc(stack->capacity*sizeof(int));
+    return stack;
+}
+
+int isFull(stack *stack) { return stack->top == stack->capacity - 1; }
+
+int isEmpty(stack *stack) { return stack->top == -1; }
+
+void push(stack *stack, int item) {
+    if (isFull(stack))
+        return;
+    stack->array[++stack->top] = item;
+}
+
+int pop(stack *stack) {
+    if (isEmpty(stack))
+        return INT_MIN;
+    return stack->array[stack->top--];
 }
