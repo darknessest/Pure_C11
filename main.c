@@ -1,269 +1,76 @@
-//4.2
-#include "queue.h"
+//5_1
+#include "pq.h"
+#include <limits.h>
+#include <stdbool.h>
 
-#define SIZE 10
-//#define TYPE int   //bool if all arcs are equal
+// Number of vertices in the graph
+#define SIZE 50 //size of graph
 
-typedef struct Pair {
-  int x;
-  int y;
-} pair;//additional
+void primMST(int graph[SIZE][SIZE], const int x) {
+    int finalMST[SIZE];
+    int key_weights[SIZE];
+    bool inMST[SIZE];
 
-struct AdjListNode {
-  int dest;
-  TYPE val;
-  struct AdjListNode *next;
-};//additional
-struct AdjList {
-  struct AdjListNode *head;
-};//additional
-typedef struct graph {
-  int V;    //number vertexes
-  bool isDirected;
-  struct AdjList *array;
-} Graph;
+    // Initialization
+    for (int i = 0; i < SIZE; i++)
+        key_weights[i] = INT_MAX, inMST[i] = false;
 
-Graph *createGraph(const int V, const bool isDirected) {
-    Graph *graph = (Graph *) malloc(sizeof(Graph));
-    graph->V = V;
-    graph->isDirected = isDirected;
-    // Create an array of adjacency lists.  Size of
-    // array will be V
-    graph->array = (struct AdjList *) malloc(V*sizeof(struct AdjList));
+    key_weights[x] = 0;
+    finalMST[x] = -1;   // First node is always root of MST
+    Node *pq = newNode(x, 0);   //Priority queue
+    pair temp;
 
-    // Initialize each adjacency list as empty by
-    // making head as NULL
-    for (int i = 0; i < V; ++i)
-        graph->array[i].head = NULL;
+    while (!isEmpty(&pq)) {
 
-    return graph;
-}//works
-void destroy_graph(Graph *G) {
-    if (G) {
-        if (G->array) {
-            struct AdjListNode *list = G->array->head;
-            while (list) {
-                struct AdjListNode *temp = list;
-                free(temp);
-                list = list->next;
+        temp = peek(&pq);
+        pop(&pq);
+        inMST[temp.vertex] = true;
+
+        for (int v = 0; v < SIZE; v++) {
+            if (inMST[v] == false && graph[temp.vertex][v] < key_weights[v] && graph[temp.vertex][v]) {
+                finalMST[v] = temp.vertex;
+                key_weights[v] = graph[temp.vertex][v];
+                //pushing into priority queue
+                push(&pq, v, graph[temp.vertex][v]);
             }
-            free(G->array);
-        }
-        free(G);
-    }
-}//works
-struct AdjListNode *newAdjListNode(const int dest) {
-    struct AdjListNode *newNode =
-        (struct AdjListNode *) malloc(sizeof(struct AdjListNode));
-    newNode->dest = dest;
-    newNode->next = NULL;
-    return newNode;
-}//works
-void PutVex(Graph *G, const int src, const int dest, const TYPE val) {
-    // Add an edge from src to dest.  A new node is
-    // added to the adjacency list of src.  The node
-    // is added at the begining
-    struct AdjListNode *newNode = newAdjListNode(dest);
-    newNode->next = G->array[src].head;
-    G->array[src].head = newNode;
-    G->array[src].head->val = val;
-
-
-    // graph is undirected -> dest to src also
-    if (G->isDirected == 1) {
-        newNode = newAdjListNode(src);
-        newNode->next = G->array[dest].head;
-        G->array[dest].head = newNode;
-        G->array[dest].head->val = val;
-    }
-}//works
-pair LocateVex(const Graph *G, const int val) {
-    for (int v = 0; v < G->V; ++v) {
-        struct AdjListNode *iter = G->array[v].head;
-        while (iter) {
-            if (iter->val == val)
-                return (pair) {v, iter->dest};
-            iter = iter->next;
         }
     }
-    return (pair) {INT_MIN, INT_MIN};
-}//works
-TYPE GetVex(const Graph *G, const pair address) {
-    //return value
-    if (address.x > G->V)
-        return INT_MIN;
-    struct AdjListNode *iter = G->array[address.x].head;
-    while (iter) {
-        if (iter->dest == address.y)
-            return iter->val;
-        iter = iter->next;
+
+    // print the constructed MST
+    int sum = 0;
+    for (int i = 0; i < SIZE; ++i) {
+        if (i == x)
+            continue;
+        printf("%d - %d\tw:%d\n", finalMST[i], i, graph[finalMST[i]][i]);
+        sum += graph[finalMST[i]][i];
     }
-
-    return INT_MIN;
-}//works
-int FirstAdjVex(const Graph *G, const int v) {
-    if (G->array[v].head)
-        return G->array[v].head->dest;
-    return -1;
-}//works
-int NextAdjVex(const Graph *G, const int v, const int w) {
-    if (G->array[v].head) {
-        struct AdjListNode *iter = G->array[v].head;
-        while (iter && iter->dest != w)
-            iter = iter->next;
-        if (iter->dest == w && iter->next)
-            return iter->next->dest;
-    }
-    return -1;
-}//works
-void InsertVex(Graph *G, const int v) {
-    if (G->V < (v + 1)) {
-        G->array = realloc(G->array, (v + 1)*sizeof(struct AdjList));
-        for (int i = G->V; i < v + 1; ++i)
-            G->array[i].head = NULL;
-        G->V = (v + 1);
-    }
-}//works
-void DeleteVex(Graph *G, const int v) {
-    if (G->V >= v) {
-        struct AdjListNode *current = G->array[v].head;
-        struct AdjListNode *next;
-
-        while (current != NULL) {
-            next = current->next;
-            free(current);
-            current = next;
-        }
-        G->array[v].head = NULL;
-    }
-}//works
-void InsertArc(Graph *G, const int v, const int w) {
-    if (G->V >= v) {
-        PutVex(G, v, w, 1);
-    } else {
-        InsertVex(G, v);
-        PutVex(G, v, w, 1);
-    }
-}//works
-void DeleteArc(Graph *G, const int v, const int w) {
-    if (G->V >= v) {
-        struct AdjListNode *prev = G->array[v].head;
-        if (prev->dest != w) {
-            struct AdjListNode *temp;
-            while (prev->next && prev->next->dest != w)
-                prev = prev->next;
-            if (prev->dest != w)
-                return;//wasn't found
-            temp = prev->next;
-            prev->next = temp->next;
-            free(temp);
-        } else {
-            G->array[v].head = prev->next;
-            free(prev);
-        }
-    }
-}//works
-
-void BFS(Graph *G, int temp) {
-    bool visited[G->V];
-    for (int i = 0; i < G->V; i++)
-        visited[i] = false;
-
-    queue *Q = createQueue();
-
-    visited[temp] = true;
-
-    enQueue(Q, temp);
-
-    struct AdjListNode *iter;
-    printf("\nBFS: ");
-    while (Q->rear) {
-        temp = deQueue(Q)->key;
-        printf("%d ", temp);
-        iter = G->array[temp].head;
-        while (iter) {
-            if (!visited[iter->dest]) {
-                visited[iter->dest] = true;
-                enQueue(Q, iter->dest);
-            }
-            iter = iter->next;
-        }
-
-    }
-}//traversal starting from vertex v
-void DFS(Graph *G, int temp) {
-    int visited[G->V];
-    for (int i = 0; i < G->V; i++)
-        visited[i] = 0;
-    stack *S = createStack((unsigned int) G->V);
-    visited[temp] = true;
-    push(S, temp);
-    struct AdjListNode *iter;
-    printf("\ndfs:");
-
-    while (!isEmpty(S)) {
-        temp = pop(S);
-        if (visited[temp] != 2) {
-            printf(" %d", temp);
-            visited[temp] = 2;
-        }
-        iter = (G->array[temp].head ? G->array[temp].head : NULL);
-        while (iter) {
-
-            if (visited[iter->dest] != 2) {
-                visited[iter->dest] = 1;
-                push(S, iter->dest);
-            }
-            iter = iter->next;
-        }
-    }
-}//traversal starting from vertex v
-
-
-void printGraph(const Graph *graph) {
-    for (int v = 0; v < graph->V; ++v) {
-        struct AdjListNode *iter = graph->array[v].head;
-        printf("\nAdjacency list of vertex %d\n head ", v);
-        while (iter) {
-            printf("-> %d(%d)", iter->dest, iter->val);
-            iter = iter->next;
-        }
-        printf("\n");
-    }
-}//works
+    printf("\nsum: %d", sum);
+}
 
 int main() {
-    // 0 - directed; 1 - undirected
-    Graph *A = createGraph(SIZE, 0);
-    for (int i = 0; i < 20; ++i) {
-        PutVex(A, rand()%10, rand()%10, 1 + rand()%10);
+    int graph[SIZE][SIZE];
+    //Initialization
+    for (int i = 0; i < SIZE; ++i) {
+        for (int j = i; j < SIZE; ++j) {
+            if (i == j)
+                graph[i][j] = 0;
+            else {
+                graph[i][j] = (rand()%2 == 0 ? (rand() + 1)%10 : 0);
+                graph[j][i] = graph[i][j];
+            }
+        }
     }
-    printGraph(A);
-    printf("----------------------------------");
-    pair p = LocateVex(A, 1);
-    printf("\nLocating value 1: %d - %d\n", p.x, p.y);
-    printf("\nValue between 9 - 3: %d\n", GetVex(A, (pair) {9, 3}));
-    printf("\nFirst vertex adjacent to 7: %d\n", FirstAdjVex(A, 7));
-    printf("\nNext vertex adjacent to  2 - 7: %d\n", NextAdjVex(A, 2, 7));
-//    InsertVex(A, 10); //[0-10] insert 10th
-    DeleteVex(A, 3);
-    InsertArc(A, 12, 1);
-    DeleteArc(A, 12, 7);
-    printf("----------------------------------\n");
-    printGraph(A);
-    destroy_graph(A);
-    printf("----------------------------------\n");
-
-    Graph *ss = createGraph(4, 0);
-    PutVex(ss, 0, 1, 1);
-    PutVex(ss, 0, 2, 1);
-    PutVex(ss, 1, 2, 1);
-    PutVex(ss, 2, 0, 1);
-    PutVex(ss, 2, 3, 1);
-    PutVex(ss, 3, 3, 1);
-    printGraph(ss);
-    BFS(ss, 2);
-    DFS(ss, 2);
+    //Printing graph
+//    for (int k = 0; k < SIZE; ++k) {
+//        printf("[");
+//        for (int i = 0; i < SIZE; ++i) {
+//            printf("%d", graph[k][i]);
+//            if (i != SIZE)
+//                printf(",");
+//        }
+//        printf("],\n");
+//    }
+    primMST(graph, 8);
 
     return 0;
 }
