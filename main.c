@@ -1,76 +1,215 @@
-//5_1
-#include "pq.h"
+//5_2
+#include "queue.h"
 #include <limits.h>
 #include <stdbool.h>
+#include <memory.h>
 
-// Number of vertices in the graph
-#define SIZE 50 //size of graph
+#define SIZE 4
 
-void primMST(int graph[SIZE][SIZE], const int x) {
-    int finalMST[SIZE];
-    int key_weights[SIZE];
-    bool inMST[SIZE];
+struct AdjListNode {
+  int dest;
+  int val;
+  struct AdjListNode *next;
+};//additional
+struct AdjList {
+  struct AdjListNode *head;
+};//additional
+typedef struct graph {
+  int V;    //number vertexes
+  bool isDirected;
+  struct AdjList *array;
+} Graph;
 
-    // Initialization
-    for (int i = 0; i < SIZE; i++)
-        key_weights[i] = INT_MAX, inMST[i] = false;
+Graph *createGraph(const int V, const bool isDirected) {
+    Graph *graph = (Graph *) malloc(sizeof(Graph));
+    graph->V = V;
+    graph->isDirected = isDirected;
+    // Create an array of adjacency lists.  Size of
+    // array will be V
+    graph->array = (struct AdjList *) malloc(V*sizeof(struct AdjList));
 
-    key_weights[x] = 0;
-    finalMST[x] = -1;   // First node is always root of MST
-    Node *pq = newNode(x, 0);   //Priority queue
-    pair temp;
+    // Initialize each adjacency list as empty by
+    // making head as NULL
+    for (int i = 0; i < V; ++i)
+        graph->array[i].head = NULL;
 
-    while (!isEmpty(&pq)) {
-
-        temp = peek(&pq);
-        pop(&pq);
-        inMST[temp.vertex] = true;
-
-        for (int v = 0; v < SIZE; v++) {
-            if (inMST[v] == false && graph[temp.vertex][v] < key_weights[v] && graph[temp.vertex][v]) {
-                finalMST[v] = temp.vertex;
-                key_weights[v] = graph[temp.vertex][v];
-                //pushing into priority queue
-                push(&pq, v, graph[temp.vertex][v]);
-            }
-        }
-    }
-
-    // print the constructed MST
-    int sum = 0;
-    for (int i = 0; i < SIZE; ++i) {
-        if (i == x)
-            continue;
-        printf("%d - %d\tw:%d\n", finalMST[i], i, graph[finalMST[i]][i]);
-        sum += graph[finalMST[i]][i];
-    }
-    printf("\nsum: %d", sum);
+    return graph;
 }
+struct AdjListNode *newAdjListNode(const int dest) {
+    struct AdjListNode *newNode =
+        (struct AdjListNode *) malloc(sizeof(struct AdjListNode));
+    newNode->dest = dest;
+    newNode->next = NULL;
+    return newNode;
+}
+void PutVex(Graph *G, const int src, const int dest, const int val) {
+    // Add an edge from src to dest.  A new node is
+    // added to the adjacency list of src.  The node
+    // is added at the begining
+    struct AdjListNode *newNode = newAdjListNode(dest);
+    newNode->next = G->array[src].head;
+    G->array[src].head = newNode;
+    G->array[src].head->val = val;
+
+    // graph is undirected -> dest to src also
+    if (G->isDirected == 1) {
+        newNode = newAdjListNode(src);
+        newNode->next = G->array[dest].head;
+        G->array[dest].head = newNode;
+        G->array[dest].head->val = val;
+    }
+}
+//void BFS(Graph *G, int temp) {
+//    bool visited[G->V];
+//    for (int i = 0; i < G->V; i++)
+//        visited[i] = false;
+//
+//    queue *Q = createQueue();
+//
+//    visited[temp] = true;
+//
+//    enQueue(Q, temp);
+//
+//    struct AdjListNode *iter;
+//    printf("\nBFS: ");
+//    while (Q->rear) {
+//        temp = deQueue(Q)->key;
+//        printf("%d ", temp);
+//        iter = G->array[temp].head;
+//        while (iter) {
+//            if (!visited[iter->dest]) {
+//                visited[iter->dest] = true;
+//                enQueue(Q, iter->dest);
+//            }
+//            iter = iter->next;
+//        }
+//
+//    }
+//}
+//void DFS(Graph *G, int temp) {
+//    int visited[G->V];
+//    for (int i = 0; i < G->V; i++)
+//        visited[i] = 0;
+//    stack *S = createStack((unsigned int) G->V);
+//    visited[temp] = true;
+//    push(S, temp);
+//    struct AdjListNode *iter;
+//    printf("\ndfs:");
+//
+//    while (!isEmpty(S)) {
+//        temp = pop(S);
+//        if (visited[temp] != 2) {
+//            printf(" %d", temp);
+//            visited[temp] = 2;
+//        }
+//        iter = (G->array[temp].head ? G->array[temp].head : NULL);
+//        while (iter) {
+//
+//            if (visited[iter->dest] != 2) {
+//                visited[iter->dest] = 1;
+//                push(S, iter->dest);
+//            }
+//            iter = iter->next;
+//        }
+//    }
+//}//traversal starting from vertex v
+
+void printGraph(const Graph *graph) {
+    for (int v = 0; v < graph->V; ++v) {
+        struct AdjListNode *iter = graph->array[v].head;
+        printf("\nAdjacency list of vertex %d\n head ", v);
+        while (iter) {
+            printf("-> %d(%d)", iter->dest, iter->val);
+            iter = iter->next;
+        }
+        printf("\n");
+    }
+}
+void findpaths(Graph *g, const int src, const int dst, int k);
+
+Graph *A;
 
 int main() {
-    int graph[SIZE][SIZE];
-    //Initialization
-    for (int i = 0; i < SIZE; ++i) {
-        for (int j = i; j < SIZE; ++j) {
-            if (i == j)
-                graph[i][j] = 0;
-            else {
-                graph[i][j] = (rand()%2 == 0 ? (rand() + 1)%10 : 0);
-                graph[j][i] = graph[i][j];
+    // 0 - directed; 1 - undirected
+    A = createGraph(SIZE, 0);
+    PutVex(A, 0, 3, 1);
+    PutVex(A, 0, 1, 1);
+    PutVex(A, 0, 2, 1);
+    PutVex(A, 1, 3, 1);
+    PutVex(A, 2, 0, 1);
+    PutVex(A, 2, 1, 1);
+    printGraph(A);
+
+    findpaths(A, 2, 3, 4);
+
+}
+
+void printpath(int *path, const int size) {
+    for (int i = 0; i < size; i++)
+        printf("%d ", path[i]);
+    printf("\n");
+}
+
+int isNotVisited(const int x, int *path, const int size) {
+    //prevents loops
+    for (int i = 0; i < size; ++i)
+        if (path[i] == x)
+            return 0;
+
+    return 1;
+}
+
+void findpaths(Graph *g, int src, const int dst, const int k) {
+    // creating a queue with paths
+    queue *q = createQueue();
+
+    int curr_size = 1;
+    int *path = (int *) malloc(sizeof(int)*curr_size);//current path
+    if (path == NULL)
+        printf("error memalloc\n");
+
+    path[0] = src;
+
+    enQueue(q, path, 1);
+
+    while (q->front) {   // == not empty
+        path = realloc(path, sizeof(int)*0);
+        curr_size = q->front->size;//length of path currently in use
+        path = realloc(path, (curr_size)*sizeof(int));
+        for (int i = 0, tempval = 0; i < curr_size; ++i) {
+            //memcpy
+            tempval = q->front->key[i];
+            path[i] = tempval;
+        }
+        deQueue(q);
+
+        int last = path[curr_size - 1];
+        struct AdjListNode *temp = g->array[last].head;
+
+        if (last == dst && curr_size == k) {
+            // if last vertex is the desired destination
+            // then print the path
+            printf("\nThe first path from %d to %d with length %d is: ", src, dst, k);
+            printpath(path, curr_size);
+            return;
+        } else {
+            //BFS
+            ++curr_size;
+            while (temp) {
+                if (isNotVisited(temp->dest, path, curr_size)) {
+                    //new available path
+                    int *newpath = malloc(sizeof(int)*curr_size);
+                    for (int i = 0, tempval = 0; i < curr_size - 1; ++i) {
+                        //memcpy
+                        tempval = path[i];
+                        newpath[i] = tempval;
+                    }
+
+                    newpath[curr_size - 1] = temp->dest;
+                    enQueue(q, newpath, curr_size);
+                }
+                temp = temp->next;
             }
         }
     }
-    //Printing graph
-//    for (int k = 0; k < SIZE; ++k) {
-//        printf("[");
-//        for (int i = 0; i < SIZE; ++i) {
-//            printf("%d", graph[k][i]);
-//            if (i != SIZE)
-//                printf(",");
-//        }
-//        printf("],\n");
-//    }
-    primMST(graph, 8);
-
-    return 0;
 }

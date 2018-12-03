@@ -2,11 +2,13 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <limits.h>
+#include <memory.h>
 
-#define TYPE int    //bool if all arcs are equal
+#define TYPE int*
 
 struct QNode {
   TYPE key;
+  unsigned size;
   struct QNode *next;
 };
 
@@ -14,9 +16,15 @@ typedef struct Queue {
   struct QNode *front, *rear;
 } queue;
 
-struct QNode *newNode(TYPE k) {
+struct QNode *newNode(TYPE k, const int size) {
     struct QNode *temp = (struct QNode *) malloc(sizeof(struct QNode));
-    temp->key = k;
+    temp->key = malloc(sizeof(int)*(size + 1));
+
+    for (int i = 0, tempval = 0; i < size; i++) {
+        //memcpy
+        tempval = k[i];
+        temp->key[i] = tempval;
+    }
     temp->next = NULL;
     return temp;
 }
@@ -27,9 +35,9 @@ queue *createQueue() {
     return q;
 }
 
-void enQueue(queue *q, TYPE k) {
-    struct QNode *temp = newNode(k);
-
+void enQueue(queue *q, TYPE k, const int size) {
+    struct QNode *temp = newNode(k, size);
+    temp->size = (unsigned int) size;
     if (q->rear == NULL) {
         q->front = q->rear = temp;
         return;
@@ -50,34 +58,4 @@ struct QNode *deQueue(queue *q) {
     if (q->front == NULL)
         q->rear = NULL;
     return temp;
-}
-
-typedef struct Stack {
-  int top;
-  unsigned capacity;
-  int *array;
-} stack;
-
-struct Stack *createStack(unsigned capacity) {
-    stack *stack = (struct Stack *) malloc(sizeof(stack));
-    stack->capacity = capacity;
-    stack->top = -1;
-    stack->array = (int *) malloc(stack->capacity*sizeof(int));
-    return stack;
-}
-
-int isFull(stack *stack) { return stack->top == stack->capacity - 1; }
-
-int isEmpty(stack *stack) { return stack->top == -1; }
-
-void push(stack *stack, int item) {
-    if (isFull(stack))
-        return;
-    stack->array[++stack->top] = item;
-}
-
-int pop(stack *stack) {
-    if (isEmpty(stack))
-        return INT_MIN;
-    return stack->array[stack->top--];
 }
