@@ -1,8 +1,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <limits.h>
-#include <memory.h>
 
 #define TYPE int*
 
@@ -48,7 +46,7 @@ void enQueue(queue *q, TYPE k, const int size) {
 }
 
 struct QNode *deQueue(queue *q) {
-    // If queue is empty, return NULL.
+    // If queue is empty, return NULL
     if (q->front == NULL)
         return NULL;
 

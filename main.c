@@ -1,8 +1,5 @@
 //5_2
 #include "queue.h"
-#include <limits.h>
-#include <stdbool.h>
-#include <memory.h>
 
 #define SIZE 4
 
@@ -59,60 +56,6 @@ void PutVex(Graph *G, const int src, const int dest, const int val) {
         G->array[dest].head->val = val;
     }
 }
-//void BFS(Graph *G, int temp) {
-//    bool visited[G->V];
-//    for (int i = 0; i < G->V; i++)
-//        visited[i] = false;
-//
-//    queue *Q = createQueue();
-//
-//    visited[temp] = true;
-//
-//    enQueue(Q, temp);
-//
-//    struct AdjListNode *iter;
-//    printf("\nBFS: ");
-//    while (Q->rear) {
-//        temp = deQueue(Q)->key;
-//        printf("%d ", temp);
-//        iter = G->array[temp].head;
-//        while (iter) {
-//            if (!visited[iter->dest]) {
-//                visited[iter->dest] = true;
-//                enQueue(Q, iter->dest);
-//            }
-//            iter = iter->next;
-//        }
-//
-//    }
-//}
-//void DFS(Graph *G, int temp) {
-//    int visited[G->V];
-//    for (int i = 0; i < G->V; i++)
-//        visited[i] = 0;
-//    stack *S = createStack((unsigned int) G->V);
-//    visited[temp] = true;
-//    push(S, temp);
-//    struct AdjListNode *iter;
-//    printf("\ndfs:");
-//
-//    while (!isEmpty(S)) {
-//        temp = pop(S);
-//        if (visited[temp] != 2) {
-//            printf(" %d", temp);
-//            visited[temp] = 2;
-//        }
-//        iter = (G->array[temp].head ? G->array[temp].head : NULL);
-//        while (iter) {
-//
-//            if (visited[iter->dest] != 2) {
-//                visited[iter->dest] = 1;
-//                push(S, iter->dest);
-//            }
-//            iter = iter->next;
-//        }
-//    }
-//}//traversal starting from vertex v
 
 void printGraph(const Graph *graph) {
     for (int v = 0; v < graph->V; ++v) {
@@ -125,11 +68,12 @@ void printGraph(const Graph *graph) {
         printf("\n");
     }
 }
-void findpaths(Graph *g, const int src, const int dst, int k);
+void findpaths(Graph *g, int src, int dst, int k);
 
-Graph *A;
+
 
 int main() {
+    Graph *A;
     // 0 - directed; 1 - undirected
     A = createGraph(SIZE, 0);
     PutVex(A, 0, 3, 1);
@@ -189,7 +133,7 @@ void findpaths(Graph *g, int src, const int dst, const int k) {
         if (last == dst && curr_size == k) {
             // if last vertex is the desired destination
             // then print the path
-            printf("\nThe first path from %d to %d with length %d is: ", src, dst, k);
+            printf("\nThe first path from %d to %d of length %d is: ", src, dst, k);
             printpath(path, curr_size);
             return;
         } else {
@@ -212,4 +156,5 @@ void findpaths(Graph *g, int src, const int dst, const int k) {
             }
         }
     }
+    printf("\nThe first path from %d to %d of length %d doesn't exist\n", src, dst, k);
 }
