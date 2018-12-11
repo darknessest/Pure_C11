@@ -1,160 +1,139 @@
-//5_2
-#include "queue.h"
+//6_2
+/*
+哈希表设计。为班级30个人的姓氏(单字姓)设计一个哈希表，假设姓氏用汉语拼音表示。
+要求用除留取余法构造哈希函数，用线性探测再散列法处理冲突，平均查找长度的上限为2。
+ */
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <memory.h>
+#include <stdbool.h>
 
-#define SIZE 4
+#define phi 0.6180339887
+#define ULL unsigned long long
 
-struct AdjListNode {
-  int dest;
-  int val;
-  struct AdjListNode *next;
-};//additional
-struct AdjList {
-  struct AdjListNode *head;
-};//additional
-typedef struct graph {
-  int V;    //number vertexes
-  bool isDirected;
-  struct AdjList *array;
-} Graph;
-
-Graph *createGraph(const int V, const bool isDirected) {
-    Graph *graph = (Graph *) malloc(sizeof(Graph));
-    graph->V = V;
-    graph->isDirected = isDirected;
-    // Create an array of adjacency lists.  Size of
-    // array will be V
-    graph->array = (struct AdjList *) malloc(V*sizeof(struct AdjList));
-
-    // Initialize each adjacency list as empty by
-    // making head as NULL
-    for (int i = 0; i < V; ++i)
-        graph->array[i].head = NULL;
-
-    return graph;
+typedef struct hn {
+  ULL hash;
+  char name[25];
+  struct hn *next;
+} HN; //hashed names
+void swap_HN(HN *i, HN *j) {
+    HN t;
+    t = *i;
+    *i = *j;
+    *j = t;
 }
-struct AdjListNode *newAdjListNode(const int dest) {
-    struct AdjListNode *newNode =
-        (struct AdjListNode *) malloc(sizeof(struct AdjListNode));
-    newNode->dest = dest;
-    newNode->next = NULL;
-    return newNode;
+int compare(const void *s1, const void *s2) {
+    HN *e1 = (HN *) s1;
+    HN *e2 = (HN *) s2;
+    //"casting" to int
+    return e1->hash/1000000 - e2->hash/1000000;
 }
-void PutVex(Graph *G, const int src, const int dest, const int val) {
-    // Add an edge from src to dest.  A new node is
-    // added to the adjacency list of src.  The node
-    // is added at the begining
-    struct AdjListNode *newNode = newAdjListNode(dest);
-    newNode->next = G->array[src].head;
-    G->array[src].head = newNode;
-    G->array[src].head->val = val;
-
-    // graph is undirected -> dest to src also
-    if (G->isDirected == 1) {
-        newNode = newAdjListNode(src);
-        newNode->next = G->array[dest].head;
-        G->array[dest].head = newNode;
-        G->array[dest].head->val = val;
+ULL hashing(const char *name) {
+    ULL x = 0;
+    int sum = 0, iter = 2;
+    for (int i = 0; name[i] != '\0'; ++i) {
+        if (name[i] >= 'a' && name[i] <= 'z') {
+            sum += (int) ((name[i]/phi)*100 + name[i]*i - 10000);
+        } else if (name[i] == ' ') {
+            x += sum*(ULL) pow(100000, iter--);
+            sum = 0;
+        } else if (name[i] == '\n') {
+            x += sum*(ULL) pow(100000, iter);
+            iter = 2;
+            break;
+        }
     }
+    x += sum*(ULL) pow(100000, iter);
+//    printf("#%s: %llu\n", name, x);
+    return x;
 }
+void print_hn(const HN *array, const int size) {
+    for (int k = 0; k < size; ++k) {
+        printf("%s : %llu", array[k].name, array[k].hash);
+        if (array[k].next) {
+            printf(" -> %s : %llu", array[k].next->name, array[k].next->hash);
+            if (array[k].next->next)
+                printf(" -> %s : %llu", array[k].next->next->name, array[k].next->next->hash);
 
-void printGraph(const Graph *graph) {
-    for (int v = 0; v < graph->V; ++v) {
-        struct AdjListNode *iter = graph->array[v].head;
-        printf("\nAdjacency list of vertex %d\n head ", v);
-        while (iter) {
-            printf("-> %d(%d)", iter->dest, iter->val);
-            iter = iter->next;
         }
         printf("\n");
     }
 }
-void findpaths(Graph *g, int src, int dst, int k);
-
-
-
-int main() {
-    Graph *A;
-    // 0 - directed; 1 - undirected
-    A = createGraph(SIZE, 0);
-    PutVex(A, 0, 3, 1);
-    PutVex(A, 0, 1, 1);
-    PutVex(A, 0, 2, 1);
-    PutVex(A, 1, 3, 1);
-    PutVex(A, 2, 0, 1);
-    PutVex(A, 2, 1, 1);
-    printGraph(A);
-
-    findpaths(A, 2, 3, 4);
-
-}
-
-void printpath(int *path, const int size) {
-    for (int i = 0; i < size; i++)
-        printf("%d ", path[i]);
-    printf("\n");
-}
-
-int isNotVisited(const int x, int *path, const int size) {
-    //prevents loops
-    for (int i = 0; i < size; ++i)
-        if (path[i] == x)
-            return 0;
-
-    return 1;
-}
-
-void findpaths(Graph *g, int src, const int dst, const int k) {
-    // creating a queue with paths
-    queue *q = createQueue();
-
-    int curr_size = 1;
-    int *path = (int *) malloc(sizeof(int)*curr_size);//current path
-    if (path == NULL)
-        printf("error memalloc\n");
-
-    path[0] = src;
-
-    enQueue(q, path, 1);
-
-    while (q->front) {   // == not empty
-        path = realloc(path, sizeof(int)*0);
-        curr_size = q->front->size;//length of path currently in use
-        path = realloc(path, (curr_size)*sizeof(int));
-        for (int i = 0, tempval = 0; i < curr_size; ++i) {
-            //memcpy
-            tempval = q->front->key[i];
-            path[i] = tempval;
-        }
-        deQueue(q);
-
-        int last = path[curr_size - 1];
-        struct AdjListNode *temp = g->array[last].head;
-
-        if (last == dst && curr_size == k) {
-            // if last vertex is the desired destination
-            // then print the path
-            printf("\nThe first path from %d to %d of length %d is: ", src, dst, k);
-            printpath(path, curr_size);
-            return;
-        } else {
-            //BFS
-            ++curr_size;
-            while (temp) {
-                if (isNotVisited(temp->dest, path, curr_size)) {
-                    //new available path
-                    int *newpath = malloc(sizeof(int)*curr_size);
-                    for (int i = 0, tempval = 0; i < curr_size - 1; ++i) {
-                        //memcpy
-                        tempval = path[i];
-                        newpath[i] = tempval;
-                    }
-
-                    newpath[curr_size - 1] = temp->dest;
-                    enQueue(q, newpath, curr_size);
-                }
-                temp = temp->next;
+void cleanup(HN *array, int *size) {
+    qsort(array, (size_t) *size, sizeof(HN), compare);
+//    for (int k = 0; k < *size; ++k)
+//        printf("%s : %llu\n", array[k].name, array[k].hash);
+//
+//    printf("\n");
+    bool flag = 0;
+    //looking for repeating elements
+    for (int k = 0; k < *size; ++k) {
+        if (array[k].hash == array[k + 1].hash) {
+            flag = 1;
+            if (array[k].next == NULL) {
+                array[k].next = (struct hn *) malloc(sizeof(HN));
+                //memcpy
+                strcpy(array[k].next->name, array[k + 1].name);
+                array[k].next->hash = array[k + 1].hash;
+                array[k].next->next = NULL;
+                array[k + 1].name[0] = '\t';
+                //special symbol to detect repeating elements
+            } else {
+                array[k].next->next = (struct hn *) malloc(sizeof(HN));
+                //memcpy
+                strcpy(array[k].next->next->name, array[k + 1].name);
+                array[k].next->next->hash = array[k + 1].hash;
+                array[k + 1].name[0] = '\t';
+                //special symbol to detect repeating elements
             }
         }
     }
-    printf("\nThe first path from %d to %d of length %d doesn't exist\n", src, dst, k);
+    if (flag) {
+        //handling repeating elements
+        for (int k = 0; k < *size; ++k) {
+            if (array[k].name[0] == '\t') {
+                //swapping useless element with last defined
+                swap_HN(&array[k], &array[*size - 1]);
+                --(*size);
+            }
+        }
+        qsort(array, (size_t) *size, sizeof(HN), compare);
+    }
+}
+int main() {
+    FILE *fp;
+    fp = fopen("in.txt", "r");
+    if (fp == NULL) {
+        perror("Error while opening the file.\n");
+        exit(EXIT_FAILURE);
+    }
+    HN class[50];
+    int i = 0, size_of_array = 0;
+    char ch, t_name[25];
+
+    //start of input
+    while ((ch = fgetc(fp)) != EOF) {
+        if (ch != '\n')
+            t_name[i++] = ch;
+        else {
+            t_name[i] = '\0';
+            i = 0;
+            strcpy(class[size_of_array].name, t_name);
+            class[size_of_array].hash = hashing(t_name);
+            class[size_of_array].next = NULL;
+            memset(t_name, 0, strlen(t_name));  //reusing the same string
+            ++size_of_array;
+        }
+    }
+    t_name[i] = '\0';
+    strcpy(class[size_of_array].name, t_name);
+    class[size_of_array].hash = hashing(t_name);
+    class[size_of_array++].next = NULL;
+    fclose(fp);
+    //end of input
+
+    cleanup(class, &size_of_array); //size of array may change
+
+    print_hn(class, size_of_array);
 }
