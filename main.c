@@ -1,45 +1,48 @@
-//7_1
+//7_2
 /*
-荷兰国旗问题：设有一个仅由红、白、蓝三种颜色的条块组成的序列。
- 试设计一个时间复杂度为O(n)的算法，使得这些条块按红、白、蓝的顺序排好，即排成荷兰国旗图案。
+假设n个部门名称的基本数据存储在字符数组name[N][25]中，5≤n≤N≤20。
+ 试设计一个起泡排序算法，将n个部门名称按字典序重新排列顺序。
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+#include <wchar.h>
+#include <locale.h>
 
-#define SIZE 100
-
-void countSort(int *array, const int size) {
-    int counter[3];
-    counter[0] = 0;
-    counter[1] = 0;
-    counter[2] = 0;
-    //counting numbers
-    for (int i = 0; i < size; ++i) {
-        if (array[i] == 0)
-            ++counter[0];
-        if (array[i] == 1)
-            ++counter[1];
-        if (array[i] == 2)
-            ++counter[2];
+void Names(wchar_t A[][25], const int n) {
+    srand(time(0));
+    int i, j, k;
+    for (i = 0; i < n; i++) {
+        k = 2*(rand()%10 + 3);    //部门字数
+        for (j = 0; j < k; j++)
+            A[i][j] = rand()%30 + L'不'; //汉字区
+        A[i][j] = '\0';
     }
-//    printf("#%d\t%d\t%d\n", counter[0], counter[1], counter[2]);
-    int j = 0, s = 0;
-    //inserting numbers
-    for (j = 0; j < counter[0]; ++j)
-        array[j] = 0;
-    for (s = j; j < s + counter[1]; ++j)
-        array[j] = 1;
-    for (s = j; j < s + counter[2]; ++j)
-        array[j] = 2;
-
-    for (int i = 0; i < size; ++i)
-        printf("%d\n", array[i]);
 }
+void swapString(wchar_t *A, wchar_t *B) {
+    wchar_t *temp = (wchar_t *) malloc((wcslen(A) + 1)*sizeof(wchar_t));
+    wcscpy(temp, A);
+    wcscpy(A, B);
+    wcscpy(B, temp);
+    free(temp);
+}
+void bubbleSort(wchar_t A[][25], const int n) {
+    for (int i = 0; i < n - 1; ++i)
+        for (int j = i + 1; j < n; ++j)
+            if (wcscmp(A[i], A[j]) > 0)
+                swapString(A[i], A[j]);
 
+}
 int main() {
-    int array[SIZE];
-    for (int i = 0; i < SIZE; ++i)
-        array[i] = rand()%3;
+    setlocale(LC_ALL, "");
+    wchar_t array[15][25];
+    Names(array, 15);
 
-    countSort(array, SIZE);
+    for (int i = 0; i < 15; ++i)
+        wprintf(L"%ls\n", array[i]);
+    bubbleSort(array, 15);
+    printf("-------------------------------------------\n");
+    for (int i = 0; i < 15; ++i)
+        wprintf(L"%ls\n", array[i]);
+
 }
