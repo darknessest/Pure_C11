@@ -3,22 +3,59 @@
 #include <stdbool.h>
 #include <limits.h>
 
-#define V 9
+#define V 11
 
 void dijkstra(const int graph[V][V], int src, int dst);
-bool hamilton(bool graph[V][V], const int src);
-void UI(const bool graph[V][V]);
+bool hamilton(const int graph[V][V], int src);
+void UI(const int graph[V][V]);
+
+const char places[V][25] = {"nanputuo temple", "library", "qinye canteen", "song'en bld",
+                            "furong lake", "qunxian(xicun) gate", "yanwu stadium",
+                            "shangxian stadium", "science and art center", "furong tunnel",
+                            "baicheng xiaomen"};
+// nanputuo temple,
+// library,
+// qinye canteen,
+// song'en bld,
+// furong lake,
+// qunxian(xicun) gate
+// yanwu stadium,
+// shangxian stadium
+// science and art center
+// furong tunnel,
+// baicheng xiaomen,
+
+// 胡里山炮台、曾厝埯
+/*
+Nanputuo - library, qinye canteen
+Library - Nanputuo, qinye canteen, song'en bld, qunxian(xicun) gate
+qinye - library, nanputuo,song'en bld, furong lake, furong tunnel, science and art center
+song'en - library, Nanputuo, qinye canteen, yanwu stadium, furong lake, science and art center
+furong lake - song'en, qinye, science and art center, furong tunnel, baicheng xiaomen,
+qunxian(xicun) gate - library, yanwu stadium, science and art center,
+yanwu stadium - library, song'en, science and art center, furong lake, shangxian stadium
+shangxian stadium - furong tunnel, science and art center, baicheng xiaomen, yanwu stadium,
+science and art center - song'en bld, furong lake, qunxian(xicun) gate, yanwu stadium, shangxian stadium, furong tunnel, baicheng xiaomen
+furong tunnel - qinye, science and art center, baicheng xiaomen, shangxian stadium
+
+baicheng xiaomen - qinye, furong lake, furong tunnel, shangxian stadium, science and art center,
+*/
 
 int main() {
-    bool G[V][V];
-    for (int i = 0; i < V; ++i) {
-        for (int j = i; j < V; ++j) {
-            if (i == j)
-                G[i][j] = 0;
-            else
-                G[i][j] = G[j][i] = rand()%2;
-        }
-    }
+    int G[V][V] = {
+        {0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0},
+        {1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0},
+        {1, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1},
+        {1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0},
+        {0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1},
+        {0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0},
+        {0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 0},
+        {0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1},
+        {0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1},
+        {0, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1},
+        {0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0}
+    };
+
     for (int i = 0; i < V; ++i) {
         for (int j = 0; j < V; ++j) {
             printf("%d ", G[i][j]);
@@ -28,20 +65,17 @@ int main() {
     UI(G);
 }
 //TODO add clear screen feature
-void UI(const bool graph[V][V]) {
+void UI(const int graph[V][V]) {
     short user_input = 0, src = 0, dst = 0;
     bool loop = 0;
 
     printf("Hello!\n");
     SCREEN_1:
-    printf("Please, choose the place where you are right now (starting point):\n"
-           "1. \n"
-           "2. \n"
-           "3. \n"
-           "4. \n"
-           "5. \n"
-           "0. Exit\n");
-    //TODO add real locations
+    printf("Please, choose the place where you are right now (starting point):\n");
+    for (int i = 0; i < V; ++i)
+        printf("%d. %s\n", i + 1, places[i]);
+
+    printf("0. Exit\n");
     scanf("%hd", &user_input);
 
     //starting location
@@ -49,21 +83,38 @@ void UI(const bool graph[V][V]) {
         case 0:
             printf("\nThank you! Goodbye!\n");
             exit(0);
-
         case 1:
-            src = 1;
+            dst = 1;
             break;
         case 2:
-            src = 2;
+            dst = 2;
             break;
         case 3:
-            src = 3;
+            dst = 3;
             break;
         case 4:
-            src = 4;
+            dst = 4;
             break;
         case 5:
-            src = 5;
+            dst = 5;
+            break;
+        case 6:
+            dst = 6;
+            break;
+        case 7:
+            dst = 7;
+            break;
+        case 8:
+            dst = 8;
+            break;
+        case 9:
+            dst = 9;
+            break;
+        case 10:
+            dst = 10;
+            break;
+        case 11:
+            dst = 11;
             break;
         default:
             printf("Please, input valid number!\n"
@@ -79,7 +130,7 @@ void UI(const bool graph[V][V]) {
     printf("\nDo you want to make a round trip ?\n"
            "1. Yes\n"
            "2. No\n"
-           "8. Go back\n"
+           "99. Go back\n"
            "0. Exit\n");
     scanf("%hd", &user_input);
     switch (user_input) {
@@ -92,7 +143,7 @@ void UI(const bool graph[V][V]) {
         case 2:
             loop = 0;
             break;
-        case 8:
+        case 99:
             //clear screen;
             goto SCREEN_1;
         default:
@@ -106,13 +157,11 @@ void UI(const bool graph[V][V]) {
 
     SCREEN_3:
     //clear screen
-    printf("Please, choose the place where you want to go (finishing point):\n"
-           "1. \n"
-           "2. \n"
-           "3. \n"
-           "4. \n"
-           "5. \n"
-           "8. Go back\n"
+    printf("Please, choose the place where you want to go (finishing point):\n");
+    for (int i = 0; i < V; ++i)
+        printf("%d. %s\n", i + 1, places[i]);
+
+    printf("99. Go back\n"
            "0. Exit\n");
     scanf("%hd", &user_input);
 
@@ -137,7 +186,26 @@ void UI(const bool graph[V][V]) {
         case 5:
             dst = 5;
             break;
+        case 6:
+            dst = 6;
+            break;
+        case 7:
+            dst = 7;
+            break;
         case 8:
+            dst = 8;
+            break;
+        case 9:
+            dst = 9;
+            break;
+        case 10:
+            dst = 10;
+            break;
+        case 11:
+            dst = 11;
+            break;
+
+        case 99:
             //clear screen;
             goto SCREEN_2;
         default:
@@ -152,11 +220,11 @@ void UI(const bool graph[V][V]) {
     if (loop == 1) {
         hamilton(graph, src);
     } else {
-        dijkstra(graph, src, dst);
+        dijkstra(graph, src - 1, dst - 1);
     }
 
 }
-
+//----------------------------------------------------------------------------
 int minDistance(const int dist[], const bool sptSet[]) {
     int min = INT_MAX, min_index = 0;
 
@@ -176,7 +244,7 @@ void printPath(const int parent[], const int x) {
     printf("->%d", x);
 }
 void printDijkstraSolutions(const int *dist, const int src, const int dst, const int *parent) {
-    printf("Vertex\t Distance\tPath");
+    printf("From-To\t Distance\tPath");
 
     printf("\n%d -> %d \t\t %d\t\t%d ", src, dst, dist[dst], src);
     printPath(parent, dst);
@@ -207,21 +275,26 @@ void dijkstra(const int graph[V][V], const int src, const int dst) {
 
     printDijkstraSolutions(dist, src, dst, parent);
 }
+//----------------------------------------------------------------------------
+void printHamCycle(int *path, const int src, const int G[V][V]) {
+    double sum = 0;
 
-void printHamCycle(int *path, const int src) {
     printf("Solution Exists:"
            " Following is one Hamiltonian Cycle \n");
-    for (int i = src; i < V; i++)
-        printf(" %d ", path[i]);
-    for (int i = 0; i <= src; i++)
-        printf(" %d ", path[i]);
-//    // Let us print the first vertex again to show the complete cycle
-//    printf(" %d ", path[0]);
-    printf("\n");
+    for (int i = src, temp = src; i < V; i++) {
+        printf(" %d ", path[i] + 1);
+        sum += G[temp][path[i]];
+        temp = path[i];
+    }
+    for (int i = 0, temp = 0; i <= src; i++) {
+        printf(" %d ", path[i] + 1);
+        sum += G[temp][path[i]];
+        temp = path[i];
+    }
+    printf("\nDistance: %lf", sum);
 }
-
+bool isSafe(const int v, const int graph[V][V], const int path[], const int pos){
 //checking wheter vertex can be used
-bool isSafe(int v, bool graph[V][V], int path[], int pos) {
     //wheter vertex is adjacent to prev vertex
     if (graph[path[pos - 1]][v] == 0)
         return false;
@@ -233,8 +306,7 @@ bool isSafe(int v, bool graph[V][V], int path[], int pos) {
 
     return true;
 }
-
-bool hamCycleUtil(bool graph[V][V], int path[], int pos) {
+bool hamCycleUtil(const int graph[V][V], int path[], int pos) {
     //if all vertices are included in Hamiltonian Cycle
     if (pos == V) {
         //if there is an edge from the last included vertex to the
@@ -260,8 +332,7 @@ bool hamCycleUtil(bool graph[V][V], int path[], int pos) {
     //if there's no path
     return false;
 }
-
-bool hamilton(bool graph[V][V], const int src) {
+bool hamilton(const int graph[V][V], const int src) {
     int *path = malloc(sizeof(int)*V);
     for (int i = 0; i < V; i++)
         path[i] = -1;
@@ -273,6 +344,6 @@ bool hamilton(bool graph[V][V], const int src) {
         return false;
     }
 
-    printHamCycle(path, src);
+    printHamCycle(path, src, graph);
     return true;
 }
