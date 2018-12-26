@@ -42,6 +42,7 @@ baicheng xiaomen - qinye, furong lake, furong tunnel, shangxian stadium, science
 */
 
 int main() {
+    //TODO add real distances
     int G[V][V] = {
         {0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0},
         {1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0},
@@ -65,6 +66,7 @@ int main() {
     UI(G);
 }
 //TODO add clear screen feature
+
 void UI(const int graph[V][V]) {
     short user_input = 0, src = 0, dst = 0;
     bool loop = 0;
@@ -84,37 +86,37 @@ void UI(const int graph[V][V]) {
             printf("\nThank you! Goodbye!\n");
             exit(0);
         case 1:
-            dst = 1;
+            src = 1;
             break;
         case 2:
-            dst = 2;
+            src = 2;
             break;
         case 3:
-            dst = 3;
+            src = 3;
             break;
         case 4:
-            dst = 4;
+            src = 4;
             break;
         case 5:
-            dst = 5;
+            src = 5;
             break;
         case 6:
-            dst = 6;
+            src = 6;
             break;
         case 7:
-            dst = 7;
+            src = 7;
             break;
         case 8:
-            dst = 8;
+            src = 8;
             break;
         case 9:
-            dst = 9;
+            src = 9;
             break;
         case 10:
-            dst = 10;
+            src = 10;
             break;
         case 11:
-            dst = 11;
+            src = 11;
             break;
         default:
             printf("Please, input valid number!\n"
@@ -218,11 +220,10 @@ void UI(const int graph[V][V]) {
     }
     SCREEN_4:
     if (loop == 1) {
-        hamilton(graph, src);
+        hamilton(graph, src - 1);
     } else {
-        dijkstra(graph, src - 1, dst - 1);
+        dijkstra(graph, (src - 1), (dst - 1));
     }
-
 }
 //----------------------------------------------------------------------------
 int minDistance(const int dist[], const bool sptSet[]) {
@@ -235,19 +236,19 @@ int minDistance(const int dist[], const bool sptSet[]) {
 
     return min_index;
 }
-void printPath(const int parent[], const int x) {
+void printDijkstraPath(const int *parent, const int x) {
     if (parent[x] == -1)
         return;
     if (parent[x] <= V)
-        printPath(parent, parent[x]);
+        printDijkstraPath(parent, parent[x]);
 
-    printf("->%d", x);
+    printf("-> %d.%s ", x + 1, places[x]);
 }
-void printDijkstraSolutions(const int *dist, const int src, const int dst, const int *parent) {
-    printf("From-To\t Distance\tPath");
-
-    printf("\n%d -> %d \t\t %d\t\t%d ", src, dst, dist[dst], src);
-    printPath(parent, dst);
+void printDijkstraSolution(const int *dist, const int src, const int dst, const int *parent) {
+    printf("From-To: %d.%s -> %d.%s\n", src + 1, places[src], dst + 1, places[dst]);
+    printf("Distance: %d\n", dist[dst]);
+    printf("Path: %d.%s ", src + 1, places[src]);
+    printDijkstraPath(parent, dst);
 }
 void dijkstra(const int graph[V][V], const int src, const int dst) {
     int dist[V];
@@ -273,27 +274,31 @@ void dijkstra(const int graph[V][V], const int src, const int dst) {
         }
     }
 
-    printDijkstraSolutions(dist, src, dst, parent);
+    printDijkstraSolution(dist, src, dst, parent);
 }
 //----------------------------------------------------------------------------
 void printHamCycle(int *path, const int src, const int G[V][V]) {
-    double sum = 0;
-
+    long sum = 0;
+    int temp_src = 0;
     printf("Solution Exists:"
            " Following is one Hamiltonian Cycle \n");
-    for (int i = src, temp = src; i < V; i++) {
-        printf(" %d ", path[i] + 1);
+    for (int j = 0; j < V; ++j)
+        if (src == path[j])
+            temp_src = j;
+
+    for (int i = temp_src, temp = temp_src; i < V; i++) {
+        printf(" %d.%s ", path[i] + 1, places[path[i]]);
         sum += G[temp][path[i]];
         temp = path[i];
     }
-    for (int i = 0, temp = 0; i <= src; i++) {
-        printf(" %d ", path[i] + 1);
+    for (int i = 0, temp = 0; i <= temp_src; i++) {
+        printf(" %d.%s", path[i] + 1, places[path[i]]);
         sum += G[temp][path[i]];
         temp = path[i];
     }
-    printf("\nDistance: %lf", sum);
+    printf("\nDistance: %lu", sum);
 }
-bool isSafe(const int v, const int graph[V][V], const int path[], const int pos){
+bool isSafe(const int v, const int graph[V][V], const int path[], const int pos) {
 //checking wheter vertex can be used
     //wheter vertex is adjacent to prev vertex
     if (graph[path[pos - 1]][v] == 0)
