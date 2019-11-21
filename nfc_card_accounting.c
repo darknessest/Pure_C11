@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <fcntl.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/mman.h>
@@ -18,6 +19,8 @@
 #define UARTDevice "/dev/ttyS2"
 #define ACCINFOPATH "card_amount.txt"
 #define HISTORYFILE "history.txt"
+
+int cur_time;
 
 unsigned char tube[] = {0xc0, 0xf9, 0xa4, 0xb0, 0x99, 0x92, 0x82, 0xf8, 0x80, 0x90, 0x7f, 0xff};
 
@@ -210,9 +213,12 @@ int get_amount(int cardnumber) {
     fp = fopen(ACCINFOPATH, "r");
     if (fp == NULL)
         exit(EXIT_FAILURE);
+//    char c_num ='0';
+//    sprintf(&c_num,"%d", cardnumber);
 
     while ((read = getline(&line, &len, fp)) != -1) {
-        if (line[0] == itoa(cardnumber))
+
+        if (atoi(&line[0]) == cardnumber)
             for (i = 0; i < 4; ++i) {
                 // starting from the last digit
                 // last char is '\n'
@@ -238,10 +244,11 @@ void set_amount(int cardnumber, int new_amount) {
     while ((ch = getc(fp)) != EOF) {
         // write character ch in file
         // updating only amount of a needed card
-        if (ch == itoa(cardnumber) && (i == 0 || buf_backup[i - 1] == '\n')) {
+        if (atoi(ch) == cardnumber && (i == 0 || buf_backup[i - 1] == '\n')) {
             i++;
             for (j = 0; j < 4; ++j) {
-                buf_backup[j + i] = itoa(new_amount/pow(10, j)%10);
+                sprintf(&buf_backup[j+1], "%d", (int) (new_amount/pow(10, j))%10);
+//                buf_backup[j + i] = itoa((int) (new_amount/pow(10, j))%10);
             }
         }
             // don't change the rest
@@ -297,7 +304,7 @@ void put_on_matrix(const int z) {
 void put_on_board(const int time, const int amount) {
     // printing to the led board
     int mem_fd;
-    int idx = 0;
+    int idx = 0, i;
     unsigned char *cpld;
 
     mem_fd = open("/dev/mem", O_RDWR);
@@ -315,10 +322,10 @@ void put_on_board(const int time, const int amount) {
     }
 
     // setting time
-    for (int i = 0; i < 4; ++i) {
+    for (i = 0; i < 4; ++i) {
         if (time > 0)
             // from left to right
-            idx = (time/pow(10, 3 - i))%10;
+            idx = (int) (time/pow(10, 3 - i))%10;
         else
             idx = 11;
 
@@ -327,10 +334,10 @@ void put_on_board(const int time, const int amount) {
     }
 
     // setting amount
-    for (int i = 0; i < 4; ++i) {
+    for (i = 0; i < 4; ++i) {
         if (amount > 0)
             // from left to right
-            idx = amount/pow(10, 3 - i)%10;
+            idx = (int) (amount/pow(10, 3 - i))%10;
         else
             idx = 10;
 
@@ -356,7 +363,7 @@ void read_history(const int cardnumber) {
     // history file structure:
     // cardnumber(any) time(4 chars) amount-left(4 chars)
     while ((read = getline(&line, &len, fp)) != -1) {
-        if (line[0] == itoa(cardnumber))
+        if (atoi(line[0]) == cardnumber)
             for (i = 0; i < 4; ++i) {
                 // starting from the last digit
                 // last char is '\n'
@@ -370,15 +377,17 @@ void read_history(const int cardnumber) {
 
 }
 
-void record_history(int cardnumber, int time, int amount) {
+void record_history(const int cardnumber, const int time, const int amount) {
     char buf[] = "1 1452 0103\n";
     FILE *fp;
     int i = 0;
     // creating a string to be written to a history file
-    buf[0] = itoa(cardnumber);
+    sprintf(&buf[0], "%d", cardnumber);
     for (i = 2; i < 6; ++i) {
-        buf[i] = itoa((int) (time/pow(10, i - 2))%10);
-        buf[5 + i] = itoa((int) (amount/pow(10, i - 2))%10);
+        sprintf(&buf[i], "%d", (int) (time/pow(10, i - 2))%10);
+        sprintf(&buf[5 + i], "%d", (int) (amount/pow(10, i - 2))%10);
+//        buf[i] = itoa((int) (time/pow(10, i - 2))%10);
+//        buf[5 + i] = itoa((int) (amount/pow(10, i - 2))%10);
     }
 
     fp = fopen(HISTORYFILE, "a");
@@ -413,9 +422,9 @@ void process_card(int cardnumber) {
 }
 
 void card_deduct(int cardnumber) {
-    int amount_left = get_amount - 1;
+    int amount_left = get_amount(cardnumber) - 1;
     set_amount(cardnumber, amount_left);
-    record_history(cardnumber, amount_left);
+    record_history(cardnumber, cur_time, amount_left);
 }
 
 int com_init(speed_t speed) {
