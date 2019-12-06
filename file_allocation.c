@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "linked_list.h"
+#include "fa_linked_list.h"
 
 struct hierarchy {
   bool isIndex;
@@ -26,14 +26,11 @@ void init(struct hierarchy *region, file **files_list) {
     (*files_list)->file_locations = malloc(sizeof(int)*10);
     (*files_list)->size = 1 + rand()%9 + rand()%10*0.1;
     sprintf((*files_list)->name, "%d", 1);
-//    strcat(files_list->name, ".txt");
     (*files_list)->next = NULL;
 
     char temp[3];
     for (int i = 1; i < 50; ++i) {
         sprintf(temp, "%d", i + 1);
-//        printf("inserting name : %s\n", temp);
-//        strcat(temp, ".txt");
         push(*files_list, temp, 1 + rand()%9 + rand()%10*0.1, NULL);
     }
 }
@@ -58,7 +55,6 @@ void deleteOdd(struct hierarchy *region, file **files_list) {
     for (int i = 0; i <= 50; i++) {
         if (i%2 == 1) {
             sprintf(temp, "%d", i);
-//            strcat(temp, ".txt");
             remove_by_name(files_list, temp);
 
             for (int j = 0; j < 500; ++j) {
@@ -115,20 +111,13 @@ void seqAlloc(struct hierarchy *region, file **files_list) {
         n = iterator->size/BLOCKSIZE;
         leftover = iterator->size - n*BLOCKSIZE*1.0;
 
-//        region[j].isIndex = true;
         for (i = 0; i < n; ++i) {
             strcpy(region[j + i].file_id, iterator->name);
-//            copyName(region[j + i].file_id, iterator->name);
-//            region[j + i].isIndex = region[j + i].isIndex == true ? true : false;
             region[j + i].size_left = 0;
-
         }
         if (leftover > 0.0) {
             strcpy(region[j + i].file_id, iterator->name);
-//            copyName(region[j + i].file_id, iterator->name);
-//            region[j + i].isIndex = false;
             region[j + i].size_left = BLOCKSIZE - leftover;
-
         }
 
         j += i + 1; // how many blocks to skip, actually should be done in a more intelligent way
@@ -166,21 +155,14 @@ void seqAddToRegion(struct hierarchy *region, file **files_list) {
                 counter = 0;
         }
 
-//        region[j].isIndex = true;
         for (i = 0; i < n; ++i) {
             strcpy(region[j + i].file_id, iterator->name);
-//            copyName(region[j + i].file_id, iterator->name);
-//            region[j + i].isIndex = false;
             region[j + i].size_left = 0;
         }
         if (leftover > 0.0) {
             strcpy(region[j + i].file_id, iterator->name);
-//            copyName(region[j + i].file_id, iterator->name);
-//            region[j + i].isIndex = false;
             region[j + i].size_left = (float) BLOCKSIZE - leftover;
         }
-
-//        j += i + 1; // absolete as we need to find the first fit for every new file
 
         if (iterator->next)
             iterator = iterator->next;
@@ -212,22 +194,19 @@ void chainedAlloc(struct hierarchy *region, file **files_list) {
         n = iterator->size/BLOCKSIZE;
         leftover = iterator->size - n*BLOCKSIZE*1.0;
 
+        // actually, here should check whether rfl is valid (enough free space)
+        // but in this this case it would lower readability
         rfl = findFreeLocation(region);
 
-//        region[rfl].isIndex = true;
         for (i = 0; i < n; ++i) {
             iterator->file_locations[i] = rfl;
             strcpy(region[rfl].file_id, iterator->name);
-//            copyName(region[rfl].file_id, iterator->name);
-//            region[rfl].isIndex = region[rfl].isIndex == true ? true : false;
             region[rfl].size_left = 0;
             rfl = findFreeLocation(region);
         }
         if (leftover > 0.0) {
             iterator->file_locations[i] = rfl;
             strcpy(region[rfl].file_id, iterator->name);
-//            copyName(region[rfl].file_id, iterator->name);
-//            region[rfl].isIndex = false;
             region[rfl].size_left = BLOCKSIZE - leftover;
         }
 
@@ -256,7 +235,6 @@ void chainAddToRegion(struct hierarchy *region, file **files_list) {
         for (i = 0; i < n; ++i) {
             iterator->file_locations[i] = rfl;
             strcpy(region[rfl].file_id, iterator->name);
-//            copyName(region[rfl].file_id, iterator->name);
             region[rfl].isIndex = region[rfl].isIndex == true ? true : false;
             region[rfl].size_left = 0;
             rfl = findFreeLocation(region);
@@ -264,7 +242,6 @@ void chainAddToRegion(struct hierarchy *region, file **files_list) {
         if (leftover > 0.0) {
             iterator->file_locations[i] = rfl;
             strcpy(region[rfl].file_id, iterator->name);
-//            copyName(region[rfl].file_id, iterator->name);
             region[rfl].isIndex = false;
             region[rfl].size_left = BLOCKSIZE - leftover;
         }
@@ -345,11 +322,9 @@ void indAddToRegion(struct hierarchy *region, file **files_list) {
         region[rfl].isIndex = true;
         region[rfl].indexed = iterator->file_locations;
 
-//        rfl = findFreeLocation(region);
         for (i = 1; i <= n; ++i) {
             rfl = findFreeLocation(region);
             iterator->file_locations[i] = rfl;
-//            copyName(region[rfl].file_id, iterator->name);
             region[rfl].isIndex = false;
             region[rfl].size_left = 0.0;
             strcpy(region[rfl].file_id, iterator->name);
@@ -359,7 +334,6 @@ void indAddToRegion(struct hierarchy *region, file **files_list) {
             rfl = findFreeLocation(region);
             iterator->file_locations[i] = rfl;
             strcpy(region[rfl].file_id, iterator->name);
-//            copyName(region[rfl].file_id, iterator->name);
             region[rfl].isIndex = false;
             region[rfl].size_left = BLOCKSIZE - leftover;
         }
@@ -368,7 +342,6 @@ void indAddToRegion(struct hierarchy *region, file **files_list) {
             iterator = iterator->next;
         else return;
     }
-
 }
 
 int main() {

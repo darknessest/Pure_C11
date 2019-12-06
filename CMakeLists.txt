@@ -3,5 +3,5 @@ project(Pure_C11)
 
 set(CMAKE_C_STANDARD 11)
 
-set(SOURCE_FILES main.c)
+set(SOURCE_FILES file_allocation.c fa_linked_list.h)
 add_executable(Pure_C11 ${SOURCE_FILES})
