@@ -274,9 +274,8 @@ void indexedAlloc(struct hierarchy *region, file **files_list) {
 
         for (i = 1; i <= n; ++i) {
             rfl = findFreeLocation(region);
-            char *name_to_copy = iterator->name;
-            printf("name to be copied: %s\n", name_to_copy);
-            strcpy(region[rfl].file_id, name_to_copy);
+
+            strcpy(region[rfl].file_id, iterator->name);
             iterator->file_locations[i] = rfl;
 
             region[rfl].isIndex = false;
@@ -285,9 +284,7 @@ void indexedAlloc(struct hierarchy *region, file **files_list) {
         }
         if (leftover > 0.0) {
             rfl = findFreeLocation(region);
-            char *name_to_copy = iterator->name;
-            printf("name to be copied: %s\n", name_to_copy);
-            strcpy(region[rfl].file_id, name_to_copy);
+            strcpy(region[rfl].file_id, iterator->name);
             iterator->file_locations[i] = rfl;
 
             region[rfl].isIndex = false;
