@@ -62,7 +62,7 @@ void writer() {
         }
         //CRITICAL SECTION END
 
-        accessSema(1); // Note I don't have to just add 1
+        accessSema(-1); // Note I don't have to just add 1
         // Go collect the child body
 
     }
@@ -72,6 +72,7 @@ void reader() {
     printf("Hi, from Reader (%d)\n", getpid());
     while (1) {
         while (!isEmpty()) {
+            accessSema(-1);
             printList();
             printf("%d ", pop());
             usleep(1000000);     // give sime pause for visualization
