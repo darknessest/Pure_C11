@@ -73,11 +73,12 @@ void reader() {
     while (1) {
         while (!isEmpty()) {
             printList();
-            printf("%d ", pop()->data);
-            usleep(100000000);     // give sime pause for visualization
+            printf("%d ", pop());
+            usleep(1000000);     // give sime pause for visualization
         }
         printf("\n");
         accessSema(-1);
+        wait(&status);
     }
 }
 
@@ -87,7 +88,7 @@ int main(int argc, char *argv[]) {
     srand((time)NULL);
 
     for (int j = 0; j < 10; ++j) {
-        insertFirst(rand()%10);
+        insertFirst(j+rand()%10);
     }
     // ------------------------------
 

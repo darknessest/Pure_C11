@@ -50,7 +50,7 @@ void insertFirst(int data) {
 }
 
 //pop first item
-struct node *pop() {
+int pop() {
 
     //save reference to first link
     struct node *tempLink = head;
@@ -59,7 +59,7 @@ struct node *pop() {
     head = head->next;
 
     //return the deleted link
-    return tempLink;
+    return tempLink->data;
 }
 
 //is list empty
